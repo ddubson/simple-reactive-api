@@ -6,29 +6,29 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import reactor.core.publisher.Flux
-import kotlin.random.Random.Default.nextLong
+import java.math.BigDecimal
+import java.util.*
 
 @SpringBootApplication
 class App : ApplicationRunner {
-
     override fun run(args: ApplicationArguments?) {
         Flux
-                .generate<Product> {
-                    val generatedId = nextLong(1, 5_000)
-                    it.next(Product(generatedId, "Product $generatedId"))
+                .generate<CustomerAccount> {
+                    it.next(CustomerAccount(UUID.randomUUID(), "Checking", BigDecimal.valueOf(20.00)))
                 }
                 .take(10)
                 .flatMap {
-                    this.productRepository().addOne(it)
+                    this.customerAccountRepository().save(it)
                 }
-                .thenMany(this.productRepository().fetchAll())
+                .thenMany(this.customerAccountRepository().findAll())
                 .subscribe {
-                    println("Product [id: ${it.id}] added. ")
+                    println("Customer Account [id: ${it.id}] added. ")
                 }
     }
 
     @Bean
-    fun productRepository(): ProductRepository = InMemoryReactiveProductRepository()
+    fun customerAccountRepository(): ReactiveRepository<CustomerAccount> =
+            InMemoryCustomerAccountReactiveRepository()
 }
 
 fun main(args: Array<String>) {
