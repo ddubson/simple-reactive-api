@@ -8,26 +8,30 @@ import org.springframework.context.annotation.Bean
 import reactor.core.publisher.Flux
 import java.math.BigDecimal
 import java.util.*
+import kotlin.random.Random.Default.nextLong
 
 @SpringBootApplication
 class App : ApplicationRunner {
     override fun run(args: ApplicationArguments?) {
         Flux
                 .generate<CustomerAccount> {
-                    it.next(CustomerAccount(UUID.randomUUID(), "Checking", BigDecimal.valueOf(20.00)))
+                    it.next(CustomerAccount(nextLong(1, 1_000), "Checking", BigDecimal.valueOf(20.00)))
                 }
                 .take(10)
                 .flatMap {
                     this.customerAccountRepository().save(it)
                 }
                 .thenMany(this.customerAccountRepository().findAll())
+                .doOnComplete {
+                    println("Finished pre-loading!")
+                }
                 .subscribe {
                     println("Customer Account [id: ${it.id}] added. ")
                 }
     }
 
     @Bean
-    fun customerAccountRepository(): ReactiveRepository<CustomerAccount> =
+    fun customerAccountRepository(): ReactiveRepository<CustomerAccount, UUID> =
             InMemoryCustomerAccountReactiveRepository()
 }
 

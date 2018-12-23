@@ -8,16 +8,16 @@ import java.util.*
 class InMemoryCustomerAccountReactiveRepository: ReactiveRepository<CustomerAccount, UUID> {
     private val inMemoryStore: MutableMap<UUID, CustomerAccount> = mutableMapOf()
 
-    override fun findById(id: UUID): Mono<CustomerAccount> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun findById(id: UUID): Mono<CustomerAccount> = Mono.justOrEmpty(inMemoryStore[id])
 
     override fun deleteById(id: UUID): Mono<Void> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        inMemoryStore.remove(id)
+        return Mono.empty()
     }
 
     override fun deleteAll(): Mono<Void> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        inMemoryStore.clear()
+        return Mono.empty()
     }
 
     override fun save(entity: CustomerAccount): Mono<CustomerAccount> {
@@ -25,8 +25,6 @@ class InMemoryCustomerAccountReactiveRepository: ReactiveRepository<CustomerAcco
         return Mono.just(entity)
     }
 
-    override fun findAll(): Flux<CustomerAccount> {
-        return Flux.fromIterable(inMemoryStore.values)
-                .delayElements(Duration.ofMillis(500))
-    }
+    override fun findAll(): Flux<CustomerAccount> =
+            Flux.fromIterable(inMemoryStore.values).delayElements(Duration.ofMillis(200))
 }
